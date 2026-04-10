@@ -1,0 +1,70 @@
+# Dependencies - 依赖文件夹不要提交
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Environment variables - 环境变量文件包含密钥，绝对不要提交
+.env
+.env.local
+.env.*
+*.env
+
+# Logs - 日志文件不需要提交
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Operating System - OS生成的文件
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE - 编辑器配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.log
+*.pid
+*.seed
+*.pid.lock
+
+# Testing - 测试覆盖率
+coverage/
+*.lcov
+.nyc_output/
+
+# Build - 构建输出
+build/
+dist/
+*.tsbuildinfo
+
+# Misc
+.cache/
+.parcel-cache/
+.npm
+.eslintcache
+.stylelintcache
+
+# Optional npm cache directory
+.npm
+
+# Optional debug stuff
+npm-debug.log
+
+# Node-inspector
+.node-inspect/
+
+# 数据库文件（如果本地测试用）
+*.sqlite
+*.sqlite3
+*.db
+
+# 个人配置
+*.local
