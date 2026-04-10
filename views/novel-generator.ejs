@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>小说生成器 - 小淇助手</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', 'Microsoft YaHei', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+    
+    .header h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      font-size: 16px;
+      opacity: 0.9;
+    }
+    
+    .controls {
+      padding: 20px 30px;
+      background: #f8f9fa;
+      border-bottom: 1px solid #e9ecef;
+    }
+    
+    .control-group {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+    
+    .control-group label {
+      font-weight: 600;
+      color: #495057;
+      min-width: 80px;
+      line-height: 40px;
+    }
+    
+    select, button, input[type="text"] {
+      padding: 10px 20px;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+    
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #4facfe;
+    }
+    
+    select:focus, button:focus {
+      outline: none;
+      border-color: #4facfe;
+    }
+    
+    button {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      padding: 12px 30px;
+    }
+    
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+    }
+    
+    button:disabled {
+      background: #adb5bd;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .novel-content {
+      padding: 30px;
+      min-height: 400px;
+      max-height: 600px;
+      overflow-y: auto;
+      line-height: 1.8;
+      font-size: 16px;
+      color: #333;
+      background: white;
+    }
+    
+    .novel-content p {
+      margin-bottom: 20px;
+      text-indent: 2em;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 50px;
+      color: #6c757d;
+    }
+    
+    .loading-spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #4facfe;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 30px;
+      border-left: 4px solid #dc3545;
+    }
+    
+    .success {
+      background: #d4edda;
+      color: #155724;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 30px;
+      border-left: 4px solid #28a745;
+    }
+    
+    .novel-content::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    .novel-content::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+    
+    .novel-content::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 4px;
+    }
+    
+    .novel-content::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        margin: 10px;
+      }
+      
+      .header h1 {
+        font-size: 24px;
+      }
+      
+      .control-group {
+        flex-direction: column;
+      }
+      
+      .control-group label {
+        min-width: auto;
+        line-height: normal;
+        margin-bottom: 5px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📚 智能小说生成器</h1>
+      <p>点击生成按钮，创作属于你的精彩故事</p>
+    </div>
+    
+    <div class="controls">
+      <div class="control-group">
+        <label for="genre">类型：</label>
+        <select id="genre">
+          <option value="奇幻">奇幻</option>
+          <option value="科幻">科幻</option>
+          <option value="武侠">武侠</option>
+          <option value="都市">都市</option>
+          <option value="历史">历史</option>
+          <option value="悬疑">悬疑</option>
+          <option value="言情">言情</option>
+        </select>
+        
+        <label for="theme">主题：</label>
+        <select id="theme">
+          <option value="冒险">冒险</option>
+          <option value="爱情">爱情</option>
+          <option value="成长">成长</option>
+          <option value="复仇">复仇</option>
+          <option value="探索">探索</option>
+          <option value="拯救">拯救</option>
+        </select>
+        
+        <label for="length">篇幅：</label>
+        <select id="length">
+          <option value="短篇">短篇</option>
+          <option value="中等" selected>中等</option>
+          <option value="长篇">长篇</option>
+        </select>
+      </div>
+      
+      <div class="control-group">
+        <label for="prompt">提示词：</label>
+        <input type="text" id="prompt" placeholder="输入你的创作提示词，留空则使用默认设置" 
+               style="flex: 1; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px;">
+      </div>
+      
+      <div style="text-align: center; margin-top: 20px;">
+        <button id="generateBtn" onclick="generateNovel()">
+          ✨ 生成小说
+        </button>
+        <button id="regenerateBtn" onclick="regenerateNovel()" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);">
+          🔄 重新生成
+        </button>
+        <button id="continueBtn" onclick="continueNovel()" style="background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);" disabled>
+          📖 继续续写
+        </button>
+      </div>
+    </div>
+    
+    <div id="messageContainer"></div>
+    
+    <div class="novel-content" id="novelContent">
+      <p style="text-align: center; color: #999; margin-top: 50px;">
+        点击"生成小说"按钮开始创作你的故事...
+      </p>
+    </div>
+  </div>
+  
+  <script>
+    let currentNovel = '';
+    
+    function showMessage(text, type) {
+      const container = document.getElementById('messageContainer');
+      container.innerHTML = `<div class="${type}">${text}</div>`;
+      
+      setTimeout(() => {
+        container.innerHTML = '';
+      }, 3000);
+    }
+    
+    function showLoading() {
+      const content = document.getElementById('novelContent');
+      content.innerHTML = `
+        <div class="loading">
+          <div class="loading-spinner"></div>
+          <p>正在创作精彩故事，请稍候...</p>
+        </div>
+      `;
+    }
+    
+    async function generateNovel() {
+      const generateBtn = document.getElementById('generateBtn');
+      generateBtn.disabled = true;
+      
+      showLoading();
+      
+      try {
+        // 获取提示词
+        const prompt = document.getElementById('prompt').value.trim();
+        
+        // 先尝试生成新小说，支持流式输出
+        const response = await fetch('/api/novels/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            genre: document.getElementById('genre').value,
+            theme: document.getElementById('theme').value,
+            length: document.getElementById('length').value,
+            prompt: prompt || null  // 如果提示词为空则发送null
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`服务器错误: ${response.status}`);
+        }
+        
+        // 使用兼容的流式处理方式
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let content = '';         // 完整内容
+        let buffer = '';          // 行缓冲区
+        let displayBuffer = '';   // 显示缓冲区（批量更新）
+        let isComplete = false;
+        let updateTimeout = null; // 节流定时器
+        
+        // 创建临时显示区域
+        const novelContent = document.getElementById('novelContent');
+        novelContent.innerHTML = '<div id="streamingContent"></div>';
+        const streamingDiv = document.getElementById('streamingContent');
+        
+        // 批量更新DOM，减少重排
+        function flushBuffer() {
+          if (displayBuffer.trim()) {
+            appendToNovel(displayBuffer, streamingDiv);
+            displayBuffer = '';
+            // 自动滚动到底部
+            novelContent.scrollTop = novelContent.scrollHeight;
+          }
+        }
+        
+        while (true) {
+          const { value, done } = await reader.read();
+          
+          if (done) {
+            isComplete = true;
+            // 处理剩余缓冲区内容
+            if (buffer.trim()) {
+              processChunk(buffer);
+            }
+            // 最后一次刷新
+            if (updateTimeout) {
+              clearTimeout(updateTimeout);
+            }
+            flushBuffer();
+            break;
+          }
+          
+          if (value) {
+            const chunk = decoder.decode(value);
+            buffer += chunk;
+            
+            // 处理完整的行
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || ''; // 保留最后不完整的行
+            
+            for (const line of lines) {
+              processChunk(line);
+            }
+            
+            // 使用节流，每200ms更新一次DOM，避免频繁重绘
+            if (!updateTimeout) {
+              updateTimeout = setTimeout(() => {
+                flushBuffer();
+                updateTimeout = null;
+              }, 200);
+            }
+          }
+        }
+        
+        // 处理单个数据块
+        function processChunk(chunk) {
+          if (!chunk || !chunk.startsWith('data: ')) return;
+          
+          const dataStr = chunk.substring(6);
+          if (dataStr === '[DONE]') {
+            isComplete = true;
+            return;
+          }
+          
+          try {
+            const data = JSON.parse(dataStr);
+            // 支持智谱AI的两种响应格式
+            let chunkContent = '';
+            if (data.choices && data.choices[0].delta && data.choices[0].delta.content) {
+              chunkContent = data.choices[0].delta.content;
+            } else if (data.data && data.data.content) {
+              // 智谱AI原生格式
+              chunkContent = data.data.content;
+            }
+            
+            if (chunkContent) {
+              content += chunkContent;
+              displayBuffer += chunkContent;  // 累积到显示缓冲区
+            }
+          } catch (e) {
+            console.warn('解析JSON失败:', e);
+          }
+        }
+        
+        // 批量更新DOM，保持段落格式
+        function flushBuffer() {
+          if (displayBuffer.trim()) {
+            appendToNovel(displayBuffer, streamingDiv);
+            displayBuffer = '';
+            // **不自动滚动到底部**，让用户可以自由阅读前面内容
+          }
+        }
+        
+        // 流式输出完成后，保存最终内容
+        currentNovel = content;
+        updateContinueButton();
+        
+        // 检查是否生成成功
+        if (content.trim()) {
+          displayNovel(content);
+          showMessage('🎉 小说生成成功！', 'success');
+        } else {
+          throw new Error('生成内容为空');
+        }
+      } catch (error) {
+        console.error('生成小说失败:', error);
+        showMessage('❌ 生成失败: ' + error.message, 'error');
+        // 显示错误信息而不是使用示例
+        document.getElementById('novelContent').innerHTML = `
+          <div style="padding: 30px; color: #dc3545; text-align: center;">
+            <p>生成失败，请检查：</p>
+            <ul style="text-align: left; margin: 20px 0; color: #666;">
+              <li>API密钥是否正确配置</li>
+              <li>网络连接是否正常</li>
+              <li>稍后重试</li>
+            </ul>
+            <button onclick="generateNovel()" style="margin-top: 20px;">重试</button>
+          </div>
+        `;
+      } finally {
+        generateBtn.disabled = false;
+      }
+    }
+    
+    async function regenerateNovel() {
+      if (!currentNovel) {
+        showMessage('请先点击"生成小说"按钮', 'error');
+        return;
+      }
+      
+      // 重新生成相同的设置
+      await generateNovel();
+    }
+    
+    async function continueNovel() {
+      if (!currentNovel) {
+        showMessage('请先生成一篇小说，才能续写', 'error');
+        return;
+      }
+      
+      const generateBtn = document.getElementById('generateBtn');
+      const continueBtn = document.getElementById('continueBtn');
+      generateBtn.disabled = true;
+      continueBtn.disabled = true;
+      
+      // 显示加载状态，保留已有内容
+      const novelContent = document.getElementById('novelContent');
+      const existingHtml = novelContent.innerHTML;
+      novelContent.innerHTML = existingHtml + `<div class="loading"><div class="loading-spinner"></div><p>正在续写中，请稍候...</p></div>`;
+      
+      try {
+        // 调用续写API
+        const response = await fetch('/api/novels/continue', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            existingContent: currentNovel,
+            genre: document.getElementById('genre').value,
+            theme: document.getElementById('theme').value,
+            length: document.getElementById('length').value
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`服务器错误: ${response.status}`);
+        }
+        
+        // 使用兼容的流式处理方式
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let continueContent = '';
+        let buffer = '';
+        let displayBuffer = '';
+        let isComplete = false;
+        let updateTimeout = null;
+        
+        // 创建续写区域
+        novelContent.innerHTML = existingHtml + '<div id="continueStreamingContent" style="border-top: 2px dashed #ddd; margin-top: 20px; padding-top: 20px;"></div>';
+        const continueDiv = document.getElementById('continueStreamingContent');
+        
+        function flushBuffer() {
+          if (displayBuffer.trim()) {
+            appendToNovel(displayBuffer, continueDiv);
+            displayBuffer = '';
+            // 不自动滚动，让用户可以继续阅读
+          }
+        }
+        
+        while (true) {
+          const { value, done } = await reader.read();
+          
+          if (done) {
+            isComplete = true;
+            if (buffer.trim()) {
+              processChunk(buffer);
+            }
+            if (updateTimeout) {
+              clearTimeout(updateTimeout);
+            }
+            flushBuffer();
+            break;
+          }
+          
+          if (value) {
+            const chunk = decoder.decode(value);
+            buffer += chunk;
+            
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+            
+            for (const line of lines) {
+              processChunk(line);
+            }
+            
+            if (!updateTimeout) {
+              updateTimeout = setTimeout(() => {
+                flushBuffer();
+                updateTimeout = null;
+              }, 200);
+            }
+          }
+        }
+        
+        // 处理单个数据块
+        function processChunk(chunk) {
+          if (!chunk || !chunk.startsWith('data: ')) return;
+          
+          const dataStr = chunk.substring(6);
+          if (dataStr === '[DONE]') {
+            isComplete = true;
+            return;
+          }
+          
+          try {
+            const data = JSON.parse(dataStr);
+            let chunkContent = '';
+            if (data.choices && data.choices[0].delta && data.choices[0].delta.content) {
+              chunkContent = data.choices[0].delta.content;
+            } else if (data.data && data.data.content) {
+              chunkContent = data.data.content;
+            }
+            
+            if (chunkContent) {
+              continueContent += chunkContent;
+              displayBuffer += chunkContent;
+            }
+          } catch (e) {
+            console.warn('解析JSON失败:', e);
+          }
+        }
+        
+        // 续写完成，合并内容
+        currentNovel += continueContent;
+        displayNovel(currentNovel);
+        showMessage('✅ 续写完成！', 'success');
+        
+      } catch (error) {
+        console.error('续写失败:', error);
+        showMessage('❌ 续写失败: ' + error.message, 'error');
+        // 恢复原有内容
+        displayNovel(currentNovel);
+      } finally {
+        generateBtn.disabled = false;
+        continueBtn.disabled = false;
+      }
+    }
+    
+    function displayNovel(content) {
+      const novelContent = document.getElementById('novelContent');
+      
+      // 将内容按段落分割并格式化
+      const paragraphs = content.split('\n\n').filter(p => p.trim());
+      const formattedContent = paragraphs.map(p => `<p>${p.trim()}</p>`).join('');
+      
+      novelContent.innerHTML = formattedContent;
+      
+      // 自动滚动到顶部
+      novelContent.scrollTop = 0;
+    }
+    
+    function appendToNovel(content, streamingDiv) {
+      if (streamingDiv) {
+        // 将新内容按段落分割并格式化
+        // 统一换行符
+        let cleanContent = content.replace(/\r\n/g, '\n');
+        
+        // 如果内容本身就有换行，按照换行分段
+        // 即使没有换行，每句也尽量分开，避免一大段
+        let paragraphs;
+        if (cleanContent.includes('\n\n')) {
+          // 已经有空行分隔，直接使用
+          paragraphs = cleanContent.split('\n\n').filter(p => p.trim());
+        } else if (cleanContent.includes('\n')) {
+          // 有单行换行，按换行分段
+          paragraphs = cleanContent.split('\n').filter(p => p.trim());
+        } else {
+          // 没有换行，检查是否有多个句子，尝试按句号分割（中文）
+          // 如果内容较长，就作为一个段落，后续内容会追加
+          paragraphs = [cleanContent];
+        }
+        
+        if (paragraphs.length === 0) {
+          if (content.trim()) {
+            streamingDiv.innerHTML += `<p>${content.trim()}</p>`;
+          }
+          return;
+        }
+        
+        const formattedContent = paragraphs.filter(p => p.trim()).map(p => `<p>${p.trim()}</p>`).join('');
+        streamingDiv.innerHTML += formattedContent;
+      }
+    }
+    
+    // 页面加载时显示欢迎信息
+    window.onload = function() {
+      showMessage('✨ 欢迎使用智能小说生成器！', 'success');
+      updateContinueButton();
+    };
+    
+    // 更新续写按钮状态
+    function updateContinueButton() {
+      const continueBtn = document.getElementById('continueBtn');
+      if (currentNovel && currentNovel.trim()) {
+        continueBtn.disabled = false;
+      } else {
+        continueBtn.disabled = true;
+      }
+    }
+  </script>
+</body>
+</html>
