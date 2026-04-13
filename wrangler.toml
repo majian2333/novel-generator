@@ -5,6 +5,10 @@ compatibility_flags = ["nodejs_compat"]
 # 配置入口点 - Cloudflare Workers 需要 main 入口
 main = "workers.js"
 
+# 配置 Node.js 内置模块 polyfill
+[node_compat]
+true = true
+
 # 配置环境变量（请在 Cloudflare dashboard 设置实际值，或在这里填写）
 # [vars]
 # ZHIPU_AI_API_KEY = "your-api-key-here"
