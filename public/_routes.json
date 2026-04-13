@@ -1,5 +1,5 @@
 {
   "version": 1,
-  "include": ["/api/*", "/health"],
-  "exclude": ["/assets/*", "/*.html", "/*.css", "/*.js", "/*.png", "/*.jpg", "/*.jpeg", "/*.gif", "/*.svg", "/*.ico"]
+  "include": ["/*"],
+  "exclude": ["/assets/*"]
 }
