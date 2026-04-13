@@ -15,12 +15,5 @@ command = ""
 [dev]
 port = 3000
 
-[[rules]]
-pattern = "/api/*"
-function = "app"
-
-[[rules]]
-pattern = "/health"
-function = "app"
-
-# 静态文件由 Cloudflare Pages 自动处理
+# 对于 Cloudflare Pages，路由由 functions 目录和 _routes.json 自动处理
+# 不需要在这里配置 rules
