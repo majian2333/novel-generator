@@ -115,9 +115,10 @@ router.post('/generate', async (req, res) => {
     
     console.log('开始流式传输...');
     
-    // 使用更兼容的方式处理流
+    // 使用更兼容的方式处理流，适配 Cloudflare 环境
     return new Promise((resolve, reject) => {
       let byteCount = 0;
+      let isCloudflare = typeof process !== 'undefined' && process.env && (process.env.CF_PAGES || process.env.CF_WORKER);
       
       // 监听数据事件
       body.on('data', (chunk) => {
@@ -128,9 +129,12 @@ router.post('/generate', async (req, res) => {
           if (!res.headersSent) {
             res.setHeader('Content-Type', 'text/event-stream');
             res.setHeader('Cache-Control', 'no-cache');
-            res.setHeader('Connection', 'keep-alive');
+            // Cloudflare 不需要 Connection: keep-alive
+            if (!isCloudflare) {
+              res.setHeader('Connection', 'keep-alive');
+            }
           }
-          if (!res.writableEnded) {
+          if (!res.writableEnded && res.write) {
             res.write(chunkStr);
           }
           console.log(`收到数据块: ${chunk.length} bytes, 总计: ${byteCount} bytes`);
@@ -144,8 +148,10 @@ router.post('/generate', async (req, res) => {
       body.on('end', () => {
         try {
           console.log(`流式传输完成，总计: ${byteCount} bytes`);
-          if (!res.writableEnded) {
+          if (!res.writableEnded && res.write) {
             res.write('data: [DONE]\n\n');
+          }
+          if (!res.writableEnded && res.end) {
             res.end();
           }
           resolve();
@@ -158,13 +164,15 @@ router.post('/generate', async (req, res) => {
       // 监听错误事件
       body.on('error', (err) => {
         console.error('API流错误:', err);
-        if (!res.headersSent) {
+        if (!res.headersSent && res.status) {
           res.status(500).json({ error: err.message });
-        } else if (!res.writableEnded) {
+        } else if (!res.writableEnded && res.write) {
           try {
             res.write(`data: {"error": "${err.message.replace(/"/g, '\\"')}"}\n\n`);
             res.write('data: [DONE]\n\n');
-            res.end();
+            if (res.end) {
+              res.end();
+            }
           } catch (e) {
             console.error('发送错误信息失败:', e);
           }
@@ -177,15 +185,17 @@ router.post('/generate', async (req, res) => {
     console.error('生成小说失败 (全局错误):', error);
     // 如果是流式响应，需要发送错误信息
     if (!res.writableEnded) {
-      if (res.headersSent) {
+      if (res.headersSent && res.write) {
         try {
           res.write(`data: {"error": "${error.message.replace(/"/g, '\\"')}"}\n\n`);
           res.write('data: [DONE]\n\n');
-          res.end();
+          if (res.end) {
+            res.end();
+          }
         } catch (e) {
           console.error('发送错误响应失败:', e);
         }
-      } else {
+      } else if (res.status) {
         res.status(500).json({
           success: false,
           error: error.message
@@ -502,9 +512,10 @@ ${existingContent}
     
     console.log('续写开始流式传输...');
     
-    // 使用更兼容的方式处理流
+    // 使用更兼容的方式处理流，适配 Cloudflare 环境
     return new Promise((resolve, reject) => {
       let byteCount = 0;
+      let isCloudflare = typeof process !== 'undefined' && process.env && (process.env.CF_PAGES || process.env.CF_WORKER);
       
       body.on('data', (chunk) => {
         try {
@@ -513,9 +524,12 @@ ${existingContent}
           if (!res.headersSent) {
             res.setHeader('Content-Type', 'text/event-stream');
             res.setHeader('Cache-Control', 'no-cache');
-            res.setHeader('Connection', 'keep-alive');
+            // Cloudflare 不需要 Connection: keep-alive
+            if (!isCloudflare) {
+              res.setHeader('Connection', 'keep-alive');
+            }
           }
-          if (!res.writableEnded) {
+          if (!res.writableEnded && res.write) {
             res.write(chunkStr);
           }
           console.log(`续写收到数据块: ${chunk.length} bytes, 总计: ${byteCount} bytes`);
@@ -528,8 +542,10 @@ ${existingContent}
       body.on('end', () => {
         try {
           console.log(`续写流式传输完成，总计: ${byteCount} bytes`);
-          if (!res.writableEnded) {
+          if (!res.writableEnded && res.write) {
             res.write('data: [DONE]\n\n');
+          }
+          if (!res.writableEnded && res.end) {
             res.end();
           }
           resolve();
@@ -541,13 +557,15 @@ ${existingContent}
       
       body.on('error', (err) => {
         console.error('续写API流错误:', err);
-        if (!res.headersSent) {
+        if (!res.headersSent && res.status) {
           res.status(500).json({ error: err.message });
-        } else if (!res.writableEnded) {
+        } else if (!res.writableEnded && res.write) {
           try {
             res.write(`data: {"error": "${err.message.replace(/"/g, '\\"')}"}\n\n`);
             res.write('data: [DONE]\n\n');
-            res.end();
+            if (res.end) {
+              res.end();
+            }
           } catch (e) {
             console.error('续写发送错误信息失败:', e);
           }
@@ -559,15 +577,17 @@ ${existingContent}
   } catch (error) {
     console.error('续写小说失败 (全局错误):', error);
     if (!res.writableEnded) {
-      if (res.headersSent) {
+      if (res.headersSent && res.write) {
         try {
           res.write(`data: {"error": "${error.message.replace(/"/g, '\\"')}"}\n\n`);
           res.write('data: [DONE]\n\n');
-          res.end();
+          if (res.end) {
+            res.end();
+          }
         } catch (e) {
           console.error('续写发送错误响应失败:', e);
         }
-      } else {
+      } else if (res.status) {
         res.status(500).json({
           success: false,
           error: error.message
